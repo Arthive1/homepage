@@ -23,6 +23,7 @@ const artData = [
         artistYears: "1853-1890",
         artistImage: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Vincent_van_Gogh_-_Self-Portrait_-_Google_Art_Project_%28454045%29.jpg/800px-Vincent_van_Gogh_-_Self-Portrait_-_Google_Art_Project_%28454045%29.jpg",
         price: "$ 120,000,000",
+        status: "Sold Out",
         image: "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?auto=format&fit=crop&w=800&q=80"
     },
     {
@@ -31,6 +32,7 @@ const artData = [
         artistYears: "1853-1890",
         artistImage: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Vincent_van_Gogh_-_Self-Portrait_-_Google_Art_Project_%28454045%29.jpg/800px-Vincent_van_Gogh_-_Self-Portrait_-_Google_Art_Project_%28454045%29.jpg",
         price: "$ 82,500,000",
+        status: "On Sale",
         image: "https://images.unsplash.com/photo-1541963463532-d68292c34b19?auto=format&fit=crop&w=800&q=80"
     },
     {
@@ -39,6 +41,7 @@ const artData = [
         artistYears: "1853-1890",
         artistImage: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Vincent_van_Gogh_-_Self-Portrait_-_Google_Art_Project_%28454045%29.jpg/800px-Vincent_van_Gogh_-_Self-Portrait_-_Google_Art_Project_%28454045%29.jpg",
         price: "$ 53,900,000",
+        status: "Pending",
         image: "https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?auto=format&fit=crop&w=800&q=80"
     },
     // Pablo Picasso
@@ -48,6 +51,7 @@ const artData = [
         artistYears: "1881-1973",
         artistImage: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/98/Pablo_picasso_1.jpg/800px-Pablo_picasso_1.jpg",
         price: "$ 200,000,000",
+        status: "Sold Out",
         image: "https://images.unsplash.com/photo-1577720580479-7d839d829c73?auto=format&fit=crop&w=800&q=80"
     },
     {
@@ -56,6 +60,7 @@ const artData = [
         artistYears: "1881-1973",
         artistImage: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/98/Pablo_picasso_1.jpg/800px-Pablo_picasso_1.jpg",
         price: "$ 150,000,000",
+        status: "On Sale",
         image: "https://images.unsplash.com/photo-1494438639946-1ebd1d20bf85?auto=format&fit=crop&w=800&q=80"
     },
     {
@@ -64,6 +69,7 @@ const artData = [
         artistYears: "1881-1973",
         artistImage: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/98/Pablo_picasso_1.jpg/800px-Pablo_picasso_1.jpg",
         price: "$ 90,000,000",
+        status: "Pending",
         image: "https://images.unsplash.com/photo-1549490349-8643362247b5?auto=format&fit=crop&w=800&q=80"
     },
     // Claude Monet
@@ -73,6 +79,7 @@ const artData = [
         artistYears: "1840-1926",
         artistImage: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Claude_Monet_1899_Nadar_crop.jpg/800px-Claude_Monet_1899_Nadar_crop.jpg",
         price: "$ 84,600,000",
+        status: "Sold Out",
         image: "https://images.unsplash.com/photo-1578301978018-3005759f48f7?auto=format&fit=crop&w=800&q=80"
     },
     {
@@ -81,6 +88,7 @@ const artData = [
         artistYears: "1840-1926",
         artistImage: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Claude_Monet_1899_Nadar_crop.jpg/800px-Claude_Monet_1899_Nadar_crop.jpg",
         price: "$ 75,000,000",
+        status: "On Sale",
         image: "https://images.unsplash.com/photo-1554188248-986adbb73be4?auto=format&fit=crop&w=800&q=80"
     },
     {
@@ -89,6 +97,7 @@ const artData = [
         artistYears: "1840-1926",
         artistImage: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Claude_Monet_1899_Nadar_crop.jpg/800px-Claude_Monet_1899_Nadar_crop.jpg",
         price: "$ 45,000,000",
+        status: "Pending",
         image: "https://images.unsplash.com/photo-1561214166-3bd859187ec0?auto=format&fit=crop&w=800&q=80"
     },
     // Leonardo da Vinci
@@ -98,6 +107,7 @@ const artData = [
         artistYears: "1452-1519",
         artistImage: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/ba/Leonardo_self.jpg/800px-Leonardo_self.jpg",
         price: "$ 860,000,000",
+        status: "Sold Out",
         image: "https://images.unsplash.com/photo-1582555172866-f73bb12a2ab3?auto=format&fit=crop&w=800&q=80"
     },
     {
@@ -106,6 +116,7 @@ const artData = [
         artistYears: "1452-1519",
         artistImage: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/ba/Leonardo_self.jpg/800px-Leonardo_self.jpg",
         price: "$ 450,000,000",
+        status: "On Sale",
         image: "https://images.unsplash.com/photo-1600880292203-757bb62b4baf?auto=format&fit=crop&w=800&q=80"
     },
     {
@@ -114,6 +125,7 @@ const artData = [
         artistYears: "1452-1519",
         artistImage: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/ba/Leonardo_self.jpg/800px-Leonardo_self.jpg",
         price: "$ 300,000,000",
+        status: "Pending",
         image: "https://images.unsplash.com/photo-1572949645841-094f3a9c4c94?auto=format&fit=crop&w=800&q=80"
     },
     // Lee Ufan
@@ -123,11 +135,15 @@ const artData = [
         artistYears: "1936-현재",
         artistImage: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Lee_Ufan.jpg/800px-Lee_Ufan.jpg",
         price: "$ 1,700,000",
+        status: "On Sale",
         image: "https://images.unsplash.com/photo-1549490349-8643362247b5?auto=format&fit=crop&w=800&q=80" // Placeholder image for abstract art
     }
 ];
 
-
+// Helper to parse price string to number
+function parsePrice(priceStr) {
+    return Number(priceStr.replace(/[^0-9]/g, ''));
+}
 
 // Daum Postcode API Search Function
 function execDaumPostcode() {
@@ -181,8 +197,11 @@ function renderGallery() {
         card.className = 'art-card';
         card.style.animationDelay = `${index * 0.1}s`;
 
+        const statusClass = art.status.toLowerCase().replace(' ', '-');
+
         card.innerHTML = `
             <div class="art-img-container">
+                <div class="status-badge ${statusClass}">${art.status}</div>
                 <img src="${art.image}" alt="${art.title}" loading="lazy">
             </div>
             <div class="art-info">
@@ -190,11 +209,44 @@ function renderGallery() {
                 <p class="artist">${art.artist}</p>
                 <div class="art-footer">
                     <span class="price">${art.price}</span>
-                    <button class="btn-bid">입찰하기</button>
+                    <button class="btn-bid" ${art.status === 'Sold Out' ? 'disabled' : ''}>${art.status === 'Sold Out' ? '판매 완료' : '입찰하기'}</button>
                 </div>
             </div>
         `;
         artGrid.appendChild(card);
+    });
+}
+
+function renderHallOfFame() {
+    const hallOfFameGrid = document.getElementById('hallOfFameGrid');
+    if (!hallOfFameGrid) return;
+    hallOfFameGrid.innerHTML = '';
+
+    // Filter only Sold Out items and sort by price descending
+    const soldItems = artData
+        .filter(art => art.status === 'Sold Out')
+        .sort((a, b) => parsePrice(b.price) - parsePrice(a.price));
+
+    soldItems.forEach((art, index) => {
+        const card = document.createElement('div');
+        card.className = 'art-card';
+        card.style.animationDelay = `${index * 0.1}s`;
+
+        card.innerHTML = `
+            <div class="art-img-container">
+                <div class="status-badge sold-out">Hall of Fame</div>
+                <img src="${art.image}" alt="${art.title}" loading="lazy">
+            </div>
+            <div class="art-info">
+                <h3>${art.title}</h3>
+                <p class="artist">${art.artist}</p>
+                <div class="art-footer">
+                    <span class="price">${art.price}</span>
+                    <span class="honor-badge">🏆 명예의 전당</span>
+                </div>
+            </div>
+        `;
+        hallOfFameGrid.appendChild(card);
     });
 }
 
@@ -252,6 +304,7 @@ function checkConfig() {
 document.addEventListener('DOMContentLoaded', () => {
     renderGallery();
     renderArtists();
+    renderHallOfFame();
 
     const loginBtn = document.querySelector('.btn-login');
     const openSignupBtn = document.querySelector('.btn-signup');
