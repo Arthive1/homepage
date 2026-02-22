@@ -15,7 +15,7 @@ const auth = firebase.auth();
 const db = firebase.firestore(); // Initialize Firestore
 const googleProvider = new firebase.auth.GoogleAuthProvider();
 
-const artData = [
+let artData = [
     // Vincent van Gogh
     {
         title: "The Starry Night",
@@ -218,7 +218,7 @@ function renderGallery() {
                 <p class="artist">${art.artist}</p>
                 <div class="art-footer">
                     <span class="price">${art.price}</span>
-                    <button class="btn-bid" ${art.status === 'Sold Out' ? 'disabled' : ''}>${art.status === 'Sold Out' ? 'Sold Out' : 'Bid'}</button>
+                    <button class="btn-bid" ${art.status === 'Sold Out' ? 'disabled' : ''} data-title="${art.title}">${art.status === 'Sold Out' ? 'Sold Out' : 'Bid'}</button>
                 </div>
             </div>
         `;
@@ -317,8 +317,177 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const openSigninBtn = document.getElementById('openSigninBtn');
     const openSignupBtn = document.getElementById('openSignupBtn');
+    const openUploadBtn = document.getElementById('openUploadBtn');
     const googleLoginBtn = document.getElementById('googleLoginBtn');
     const googleSignupBtn = document.getElementById('googleSignupBtn');
+    const uploadModal = document.getElementById('uploadModal');
+    const closeUploadModal = document.getElementById('closeUploadModal');
+    const cancelUploadBtn = document.getElementById('cancelUploadBtn');
+    const artworkUploadForm = document.getElementById('artworkUploadForm');
+    const bidModal = document.getElementById('bidModal');
+    const closeBidModal = document.getElementById('closeBidModal');
+    const cancelBidBtn = document.getElementById('cancelBidBtn');
+    const bidForm = document.getElementById('bidForm');
+    const bidArtworkTitle = document.getElementById('bidArtworkTitle');
+    const artGrid = document.getElementById('artGrid');
+    const myAccountBtn = document.getElementById('myAccountBtn');
+    const sidebarLinks = document.querySelectorAll('.sidebar-link');
+    const tabContents = document.querySelectorAll('.tab-content');
+
+    if (openUploadBtn) {
+        openUploadBtn.addEventListener('click', () => {
+            if (uploadModal) uploadModal.style.display = 'block';
+        });
+    }
+
+    // Bid Button Click handling (Event Delegation)
+    if (artGrid) {
+        artGrid.addEventListener('click', (e) => {
+            if (e.target.classList.contains('btn-bid') && !e.target.disabled) {
+                const title = e.target.dataset.title;
+                if (bidArtworkTitle) bidArtworkTitle.textContent = title;
+                if (bidModal) bidModal.style.display = 'block';
+            }
+        });
+    }
+
+    if (myAccountBtn) {
+        myAccountBtn.addEventListener('click', () => {
+            switchSection('myAccountSection');
+        });
+    }
+
+    // Account Sidebar Tab Switching
+    sidebarLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const targetTab = link.dataset.tab;
+
+            // Update Link UI
+            sidebarLinks.forEach(l => l.classList.remove('active'));
+            link.classList.add('active');
+
+            // Show target tab content
+            tabContents.forEach(content => {
+                if (content.id === `${targetTab}Tab`) {
+                    content.classList.remove('hidden');
+                } else {
+                    content.classList.add('hidden');
+                }
+            });
+        });
+    });
+
+    if (closeBidModal) {
+        closeBidModal.addEventListener('click', () => {
+            if (bidModal) bidModal.style.display = 'none';
+        });
+    }
+
+    if (cancelBidBtn) {
+        cancelBidBtn.addEventListener('click', () => {
+            if (bidModal) bidModal.style.display = 'none';
+        });
+    }
+
+    if (bidForm) {
+        bidForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const amount = document.getElementById('bidAmount').value;
+            alert(`Successfully submitted a bid of ${amount} for "${bidArtworkTitle.textContent}"!`);
+            if (bidModal) bidModal.style.display = 'none';
+            bidForm.reset();
+        });
+    }
+
+    if (closeUploadModal) {
+        closeUploadModal.addEventListener('click', () => {
+            uploadModal.style.display = 'none';
+            resetUploadModal();
+        });
+    }
+
+    if (cancelUploadBtn) {
+        cancelUploadBtn.addEventListener('click', () => {
+            uploadModal.style.display = 'none';
+            resetUploadModal();
+        });
+    }
+
+    function resetUploadModal() {
+        if (artworkUploadForm) artworkUploadForm.reset();
+        selectedImageData = null;
+        const dropZoneModal = document.getElementById('dropZoneModal');
+        if (dropZoneModal) {
+            dropZoneModal.innerHTML = '<p>Drag & Drop image here or click to select</p><input type="file" id="fileInputModal" accept="image/*" style="display: none;">';
+            const fileInputModal = document.getElementById('fileInputModal');
+            fileInputModal.addEventListener('change', (e) => handleFile(e.target.files[0], dropZoneModal));
+            dropZoneModal.addEventListener('click', () => fileInputModal.click());
+        }
+    }
+
+    // Modal Drag and Drop Logic
+    const dropZoneModal = document.getElementById('dropZoneModal');
+    const fileInputModal = document.getElementById('fileInputModal');
+
+    if (dropZoneModal && fileInputModal) {
+        dropZoneModal.addEventListener('click', () => fileInputModal.click());
+        dropZoneModal.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZoneModal.classList.add('drag-over');
+        });
+        dropZoneModal.addEventListener('dragleave', () => dropZoneModal.classList.remove('drag-over'));
+        dropZoneModal.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZoneModal.classList.remove('drag-over');
+            handleFile(e.dataTransfer.files[0], dropZoneModal);
+        });
+        fileInputModal.addEventListener('change', (e) => handleFile(e.target.files[0], dropZoneModal));
+    }
+
+    function handleFile(file, container) {
+        if (file && file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                selectedImageData = e.target.result;
+                container.innerHTML = `<img src="${selectedImageData}" class="preview-img">`;
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    if (artworkUploadForm) {
+        artworkUploadForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const title = document.getElementById('modalUploadTitle').value;
+            const price = document.getElementById('modalUploadPrice').value;
+
+            // Get artist name from session storage
+            const artist = sessionStorage.getItem('currentUserDisplayName') || "Anonymous Artist";
+
+            if (!selectedImageData) {
+                alert('Please select an image first.');
+                return;
+            }
+
+            const newArt = {
+                title: title,
+                artist: artist,
+                artistYears: "Contemporary",
+                artistImage: "https://upload.wikimedia.org/wikipedia/commons/8/89/Portrait_Placeholder.png",
+                price: price,
+                status: "On Sale",
+                image: selectedImageData
+            };
+
+            artData.push(newArt);
+            alert('Artwork uploaded successfully!');
+            uploadModal.style.display = 'none';
+            resetUploadModal();
+            renderGallery();
+            renderArtists();
+        });
+    }
 
     // Login UI Elements
     const loginSection = document.getElementById('loginSection');
@@ -326,17 +495,30 @@ document.addEventListener('DOMContentLoaded', () => {
     const loggedInUserId = document.getElementById('loggedInUserId');
     const logoutBtn = document.getElementById('logoutBtn');
 
-    function updateUIForLoginState(isLoggedIn, email = '') {
+    function updateUIForLoginState(isLoggedIn, email = '', displayName = '') {
+        const mockType = sessionStorage.getItem('mockAccountType');
+        const realType = sessionStorage.getItem('currentUserAccountType');
+        const isArtist = mockType === 'artist' || realType === 'artist';
+        const openUploadBtn = document.getElementById('openUploadBtn');
+
         if (isLoggedIn) {
+            if (displayName) sessionStorage.setItem('currentUserDisplayName', displayName);
             if (loginSection) loginSection.classList.add('hidden');
             if (userProfile) {
                 userProfile.classList.remove('hidden');
-                if (loggedInUserId) loggedInUserId.textContent = email;
+                if (loggedInUserId) loggedInUserId.textContent = displayName || email;
+            }
+            if (isArtist && openUploadBtn) {
+                openUploadBtn.classList.remove('hidden');
+            } else if (openUploadBtn) {
+                openUploadBtn.classList.add('hidden');
             }
         } else {
+            sessionStorage.removeItem('currentUserDisplayName');
             if (loginSection) loginSection.classList.remove('hidden');
             if (userProfile) userProfile.classList.add('hidden');
             if (loggedInUserId) loggedInUserId.textContent = '';
+            if (openUploadBtn) openUploadBtn.classList.add('hidden');
         }
     }
 
@@ -362,12 +544,36 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // Test Account Bypass
-            if (email === '1234@gmail.com' && password === '123456') {
-                alert('Logged in with test account!');
+            // Test Account Bypass - Collector
+            if (email === 'col@arthive.com' && password === '123456') {
+                alert('Logged in with Collector account!');
                 sessionStorage.setItem('mockUser', email);
-                updateUIForLoginState(true, email);
+                sessionStorage.setItem('mockAccountType', 'collector');
+                updateUIForLoginState(true, email, 'James Col');
                 if (signinModal) signinModal.style.display = 'none';
+                renderGallery();
+                return;
+            }
+
+            // Test Account Bypass - Artist
+            if (email === 'art@arthive.com' && password === '123456') {
+                alert('Logged in with Artist account!');
+                sessionStorage.setItem('mockUser', email);
+                sessionStorage.setItem('mockAccountType', 'artist');
+                updateUIForLoginState(true, email, 'Leonardo da Vinci');
+                if (signinModal) signinModal.style.display = 'none';
+                renderGallery();
+                return;
+            }
+
+            // Keep existing test accounts for backward compatibility or remove if desired
+            if (email === '1234@gmail.com' && password === '123456') {
+                alert('Logged in with test account (Collector)!');
+                sessionStorage.setItem('mockUser', email);
+                sessionStorage.setItem('mockAccountType', 'collector');
+                updateUIForLoginState(true, email, 'Test Collector');
+                if (signinModal) signinModal.style.display = 'none';
+                renderGallery();
                 return;
             }
 
@@ -414,6 +620,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.target === signinModal) {
             signinModal.style.display = 'none';
         }
+        if (e.target === uploadModal) {
+            uploadModal.style.display = 'none';
+            resetUploadModal();
+        }
+        if (e.target === bidModal) {
+            bidModal.style.display = 'none';
+        }
     });
 
     // Real-time Password Match Feedback
@@ -449,6 +662,7 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             if (!checkConfig()) return;
 
+            const name = document.getElementById('signupName').value;
             const email = document.getElementById('signupEmail').value;
             const password = document.getElementById('signupPassword').value;
             const passwordConfirm = document.getElementById('signupPasswordConfirm').value;
@@ -478,12 +692,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 // 2. Save Extra Info in Firestore (DB 설정이 안 되어있을 경우를 위한 예외 처리)
                 try {
                     await db.collection('users').doc(user.uid).set({
+                        displayName: name,
                         email: email,
                         phone: phone,
                         address: fullAddress,
                         accountType: accountType,
                         createdAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
+                    // Update Auth Profile for easier access
+                    await user.updateProfile({ displayName: name });
                 } catch (dbError) {
                     console.warn("Firestore save skipped (Database might not be initialized):", dbError);
                 }
@@ -528,21 +745,42 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Track Auth State & Logout
-    auth.onAuthStateChanged((user) => {
+    auth.onAuthStateChanged(async (user) => {
         if (user) {
             console.log("User is signed in:", user);
-            updateUIForLoginState(true, user.email || user.displayName);
+
+            // Fetch accountType and displayName from Firestore
+            let accountType = 'collector';
+            let displayName = user.displayName || '';
+            try {
+                const userDoc = await db.collection('users').doc(user.uid).get();
+                if (userDoc.exists) {
+                    const data = userDoc.data();
+                    accountType = data.accountType || 'collector';
+                    displayName = data.displayName || user.displayName || '';
+                }
+            } catch (err) {
+                console.warn("Firestore access failed, using default account type:", err);
+            }
+
+            sessionStorage.setItem('currentUserAccountType', accountType);
+            updateUIForLoginState(true, user.email || user.displayName, displayName);
+            renderGallery();
         } else {
             console.log("User is signed out");
             if (!sessionStorage.getItem('mockUser')) {
+                sessionStorage.removeItem('currentUserAccountType');
                 updateUIForLoginState(false);
+                renderGallery();
             }
         }
     });
 
     // Check Mock User on load
     if (sessionStorage.getItem('mockUser')) {
-        updateUIForLoginState(true, sessionStorage.getItem('mockUser'));
+        const mockName = sessionStorage.getItem('mockAccountType') === 'artist' ? 'Leonardo da Vinci' : 'James Col';
+        updateUIForLoginState(true, sessionStorage.getItem('mockUser'), mockName);
+        renderGallery();
     }
 
     // Logout Functionality
@@ -550,12 +788,17 @@ document.addEventListener('DOMContentLoaded', () => {
         logoutBtn.addEventListener('click', async () => {
             if (sessionStorage.getItem('mockUser')) {
                 sessionStorage.removeItem('mockUser');
+                sessionStorage.removeItem('mockAccountType');
+                sessionStorage.removeItem('currentUserAccountType');
                 updateUIForLoginState(false);
                 alert('Log out successful.');
+                renderGallery();
             } else {
                 try {
                     await auth.signOut();
+                    sessionStorage.removeItem('currentUserAccountType');
                     alert('Log out successful.');
+                    renderGallery();
                 } catch (error) {
                     console.error("Logout Error:", error);
                 }
