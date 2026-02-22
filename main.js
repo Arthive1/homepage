@@ -319,6 +319,26 @@ document.addEventListener('DOMContentLoaded', () => {
     const openSignupBtn = document.querySelector('.btn-signup');
     const googleLoginBtn = document.getElementById('googleLoginBtn');
 
+    // Login UI Elements
+    const loginSection = document.getElementById('loginSection');
+    const userProfile = document.getElementById('userProfile');
+    const loggedInUserId = document.getElementById('loggedInUserId');
+    const logoutBtn = document.getElementById('logoutBtn');
+
+    function updateUIForLoginState(isLoggedIn, email = '') {
+        if (isLoggedIn) {
+            if (loginSection) loginSection.classList.add('hidden');
+            if (userProfile) {
+                userProfile.classList.remove('hidden');
+                if (loggedInUserId) loggedInUserId.textContent = email;
+            }
+        } else {
+            if (loginSection) loginSection.classList.remove('hidden');
+            if (userProfile) userProfile.classList.add('hidden');
+            if (loggedInUserId) loggedInUserId.textContent = '';
+        }
+    }
+
     // Modal Elements
     const signupModal = document.getElementById('signupModal');
     const closeModal = document.querySelector('.close-modal');
@@ -333,6 +353,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (!email || !password) {
             alert('Please enter both email and password.');
+            return;
+        }
+
+        // Test Account Bypass
+        if (email === '1234@gmail.com' && password === '123456') {
+            alert('Logged in with test account!');
+            sessionStorage.setItem('mockUser', email);
+            updateUIForLoginState(true, email);
             return;
         }
 
@@ -421,17 +449,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 const userCredential = await auth.createUserWithEmailAndPassword(email, password);
                 const user = userCredential.user;
 
-                // 2. Save Extra Info in Firestore
-                await db.collection('users').doc(user.uid).set({
-                    email: email,
-                    phone: phone,
-                    address: fullAddress,
-                    accountType: accountType,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
+                // 2. Save Extra Info in Firestore (DB 설정이 안 되어있을 경우를 위한 예외 처리)
+                try {
+                    await db.collection('users').doc(user.uid).set({
+                        email: email,
+                        phone: phone,
+                        address: fullAddress,
+                        accountType: accountType,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                } catch (dbError) {
+                    console.warn("Firestore save skipped (Database might not be initialized):", dbError);
+                }
 
                 alert('Sign up completed successfully!');
-                window.location.href = 'index.html';
+
+                // 모달 강제 종료
+                if (signupModal) signupModal.style.display = 'none';
+
+                // 메인 페이지로 이동 (로고 클릭 트리거)
+                const mainLogo = document.getElementById('mainLogo');
+                if (mainLogo) mainLogo.click();
+
             } catch (error) {
                 console.error("Signup Error:", error);
                 alert(`Sign up failed: ${error.message}`);
@@ -454,14 +493,41 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Track Auth State
+    // Track Auth State & Logout
     auth.onAuthStateChanged((user) => {
         if (user) {
             console.log("User is signed in:", user);
+            updateUIForLoginState(true, user.email || user.displayName);
         } else {
             console.log("User is signed out");
+            if (!sessionStorage.getItem('mockUser')) {
+                updateUIForLoginState(false);
+            }
         }
     });
+
+    // Check Mock User on load
+    if (sessionStorage.getItem('mockUser')) {
+        updateUIForLoginState(true, sessionStorage.getItem('mockUser'));
+    }
+
+    // Logout Functionality
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', async () => {
+            if (sessionStorage.getItem('mockUser')) {
+                sessionStorage.removeItem('mockUser');
+                updateUIForLoginState(false);
+                alert('Log out successful.');
+            } else {
+                try {
+                    await auth.signOut();
+                    alert('Log out successful.');
+                } catch (error) {
+                    console.error("Logout Error:", error);
+                }
+            }
+        });
+    }
 
     // --- NAVIGATION & SLIDESHOW LOGIC ---
     const navLinks = document.querySelectorAll('.nav-link');
