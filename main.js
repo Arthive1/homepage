@@ -192,7 +192,16 @@ function renderGallery() {
     if (!artGrid) return;
     artGrid.innerHTML = '';
 
-    artData.forEach((art, index) => {
+    // Sort: On Sale (1) > Pending (2) > Sold Out (3), then by Price DESC
+    const statusOrder = { "On Sale": 1, "Pending": 2, "Sold Out": 3 };
+    const sortedGalleryData = [...artData].sort((a, b) => {
+        if (statusOrder[a.status] !== statusOrder[b.status]) {
+            return statusOrder[a.status] - statusOrder[b.status];
+        }
+        return parsePrice(b.price) - parsePrice(a.price);
+    });
+
+    sortedGalleryData.forEach((art, index) => {
         const card = document.createElement('div');
         card.className = 'art-card';
         card.style.animationDelay = `${index * 0.1}s`;
@@ -481,6 +490,14 @@ document.addEventListener('DOMContentLoaded', () => {
             switchSection(targetSection);
         });
     });
+
+    // Logo Click Navigation
+    const mainLogo = document.getElementById('mainLogo');
+    if (mainLogo) {
+        mainLogo.addEventListener('click', () => {
+            switchSection('mainSection');
+        });
+    }
 
     // Slideshow Logic
     const slideshowContent = document.getElementById('slideshowContent');
