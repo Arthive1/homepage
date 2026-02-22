@@ -979,12 +979,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 sessionStorage.removeItem('currentUserAccountType');
                 updateUIForLoginState(false);
                 alert('Log out successful.');
+                switchSection('mainSection');
                 renderGallery();
             } else {
                 try {
                     await auth.signOut();
                     sessionStorage.removeItem('currentUserAccountType');
                     alert('Log out successful.');
+                    switchSection('mainSection');
                     renderGallery();
                 } catch (error) {
                     console.error("Logout Error:", error);
