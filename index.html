@@ -24,22 +24,22 @@
             <!-- Login State -->
             <div id="loginSection" class="login-wrapper">
                 <div class="input-group">
-                    <input type="text" placeholder="아이디" id="username">
-                    <input type="password" placeholder="비밀번호" id="password">
+                    <input type="text" placeholder="Email" id="username">
+                    <input type="password" placeholder="Password" id="password">
                 </div>
-                <button class="btn btn-login">로그인</button>
-                <button class="btn btn-signup">회원가입</button>
+                <button class="btn btn-login">Login</button>
+                <button class="btn btn-signup">Sign Up</button>
                 <button class="btn btn-google" id="googleLoginBtn">
                     <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google"
                         width="18" height="18">
-                    Google 로그인
+                    Log in with Google
                 </button>
             </div>
 
             <!-- Logged-in State -->
             <div id="userProfile" class="user-profile hidden">
                 <span class="welcome-text">Welcome, <span id="loggedInUserId" class="user-id"></span></span>
-                <button id="logoutBtn" class="btn btn-logout">로그아웃</button>
+                <button id="logoutBtn" class="btn btn-logout">Log Out</button>
             </div>
         </div>
     </header>
@@ -58,7 +58,7 @@
         <section id="gallerySection" class="content-section hidden">
             <section class="gallery-title">
                 <h2>Gallery</h2>
-                <p>엄선된 프리미엄 미술 작품들을 만나보세요</p>
+                <p>Discover our curated premium artworks.</p>
             </section>
             <div class="art-grid" id="artGrid">
                 <!-- Art cards will be injected by main.js -->
@@ -68,7 +68,7 @@
         <section id="artistsSection" class="content-section hidden">
             <section class="gallery-title">
                 <h2>Artists</h2>
-                <p>전 세계 거장들의 예술 세계를 탐구해보세요</p>
+                <p>Explore the artistic worlds of masters from around the globe.</p>
             </section>
             <div class="art-grid" id="artistGrid">
                 <!-- Artist cards will be injected by main.js -->
@@ -79,7 +79,7 @@
         <section id="hallOfFameSection" class="content-section hidden">
             <section class="gallery-title">
                 <h2>Hall of Fame</h2>
-                <p>시대를 초월한 가치를 인정받은 명예로운 작품들</p>
+                <p>Honorable artworks recognized for their timeless value.</p>
             </section>
             <div class="art-grid" id="hallOfFameGrid">
                 <!-- Top priced sold cards will be injected by main.js -->
@@ -97,38 +97,52 @@
     <div id="signupModal" class="modal-overlay">
         <div class="modal-content">
             <span class="close-modal">&times;</span>
-            <h2>ARTHIVE 회원가입</h2>
-            <p class="modal-desc">ARTHIVE의 회원이 되어 독보적인 예술 작품을 소장하세요.</p>
+            <h2>Sign Up for ARTHIVE</h2>
+            <p class="modal-desc">Join ARTHIVE to own exclusive artworks.</p>
             <form id="signupForm">
                 <div class="form-group">
-                    <label>이메일 주소</label>
+                    <label>Account Type</label>
+                    <div style="display: flex; gap: 20px; padding: 5px 0;">
+                        <label
+                            style="display: flex; align-items: center; gap: 8px; color: var(--text-primary); cursor: pointer; font-size: 0.95rem;">
+                            <input type="radio" name="accountType" value="collector" checked style="width: auto;">
+                            Collector
+                        </label>
+                        <label
+                            style="display: flex; align-items: center; gap: 8px; color: var(--text-primary); cursor: pointer; font-size: 0.95rem;">
+                            <input type="radio" name="accountType" value="artist" style="width: auto;"> Artist
+                        </label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Email Address</label>
                     <input type="email" id="signupEmail" placeholder="example@arthive.com" required>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label>비밀번호</label>
-                        <input type="password" id="signupPassword" placeholder="6자리 이상" required>
+                        <label>Password</label>
+                        <input type="password" id="signupPassword" placeholder="Min 6 characters" required>
                     </div>
                     <div class="form-group">
-                        <label>비밀번호 확인</label>
-                        <input type="password" id="signupPasswordConfirm" placeholder="비밀번호 재입력" required>
+                        <label>Confirm Password</label>
+                        <input type="password" id="signupPasswordConfirm" placeholder="Re-enter password" required>
                         <span id="passwordMatchMsg" class="match-msg"></span>
                     </div>
                 </div>
                 <div class="form-group">
-                    <label>연락처</label>
+                    <label>Phone Number</label>
                     <input type="tel" id="signupPhone" placeholder="010-0000-0000" required>
                 </div>
                 <div class="form-group">
-                    <label>주소</label>
+                    <label>Address</label>
                     <div class="address-group">
-                        <input type="text" id="signupAddress" placeholder="배송지 주소를 입력해주세요" readonly required>
-                        <button type="button" class="btn-address-search" onclick="execDaumPostcode()">주소 검색</button>
+                        <input type="text" id="signupAddress" placeholder="Enter shipping address" readonly required>
+                        <button type="button" class="btn-address-search" onclick="execDaumPostcode()">Search</button>
                     </div>
-                    <input type="text" id="signupAddressDetail" placeholder="상세 주소를 입력해주세요 (동, 호수 등)"
+                    <input type="text" id="signupAddressDetail" placeholder="Enter detailed address (Apt, Suite, etc.)"
                         style="margin-top: 10px;">
                 </div>
-                <button type="submit" class="btn-submit-signup">회원가입 완료</button>
+                <button type="submit" class="btn-submit-signup">Complete Sign Up</button>
             </form>
         </div>
     </div>

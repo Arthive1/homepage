@@ -218,7 +218,7 @@ function renderGallery() {
                 <p class="artist">${art.artist}</p>
                 <div class="art-footer">
                     <span class="price">${art.price}</span>
-                    <button class="btn-bid" ${art.status === 'Sold Out' ? 'disabled' : ''}>${art.status === 'Sold Out' ? '판매 완료' : '입찰하기'}</button>
+                    <button class="btn-bid" ${art.status === 'Sold Out' ? 'disabled' : ''}>${art.status === 'Sold Out' ? 'Sold Out' : 'Bid'}</button>
                 </div>
             </div>
         `;
@@ -251,7 +251,7 @@ function renderHallOfFame() {
                 <p class="artist">${art.artist}</p>
                 <div class="art-footer">
                     <span class="price">${art.price}</span>
-                    <span class="honor-badge">🏆 명예의 전당</span>
+                    <span class="honor-badge">🏆 Hall of Fame</span>
                 </div>
             </div>
         `;
@@ -332,16 +332,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const password = document.getElementById('password').value;
 
         if (!email || !password) {
-            alert('이메일과 비밀번호를 모두 입력해주세요.');
+            alert('Please enter both email and password.');
             return;
         }
 
         try {
             const userCredential = await auth.signInWithEmailAndPassword(email, password);
-            alert(`${userCredential.user.email}님, 환영합니다!`);
+            alert(`Welcome, ${userCredential.user.email}!`);
         } catch (error) {
             console.error("Login Error:", error);
-            alert(`로그인 실패: ${error.message}`);
+            alert(`Login failed: ${error.message}`);
         }
     });
 
@@ -378,10 +378,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (p1 === p2) {
-            passwordMatchMsg.textContent = '일치함';
+            passwordMatchMsg.textContent = 'Matched';
             passwordMatchMsg.className = 'match-msg success';
         } else {
-            passwordMatchMsg.textContent = '불일치';
+            passwordMatchMsg.textContent = 'Not matched';
             passwordMatchMsg.className = 'match-msg error';
         }
     }
@@ -403,13 +403,16 @@ document.addEventListener('DOMContentLoaded', () => {
             const addressDetail = document.getElementById('signupAddressDetail').value;
             const fullAddress = `${addressMain} ${addressDetail}`.trim();
 
+            const accountTypeElement = document.querySelector('input[name="accountType"]:checked');
+            const accountType = accountTypeElement ? accountTypeElement.value : 'collector';
+
             if (password !== passwordConfirm) {
-                alert('비밀번호가 일치하지 않습니다.');
+                alert('Passwords do not match.');
                 return;
             }
 
             if (password.length < 6) {
-                alert('비밀번호는 최소 6자리 이상이어야 합니다.');
+                alert('Password must be at least 6 characters long.');
                 return;
             }
 
@@ -423,14 +426,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     email: email,
                     phone: phone,
                     address: fullAddress,
+                    accountType: accountType,
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
-                alert('회원 가입이 완료되었습니다.');
+                alert('Sign up completed successfully!');
                 window.location.href = 'index.html';
             } catch (error) {
                 console.error("Signup Error:", error);
-                alert(`회원가입 실패: ${error.message}`);
+                alert(`Sign up failed: ${error.message}`);
             }
         });
     }
@@ -442,10 +446,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
             try {
                 const result = await auth.signInWithPopup(googleProvider);
-                alert(`${result.user.displayName}님, 환영합니다!`);
+                alert(`Welcome, ${result.user.displayName}!`);
             } catch (error) {
                 console.error("Google Login Error:", error);
-                alert(`구글 로그인 실패: ${error.message}`);
+                alert(`Google login failed: ${error.message}`);
             }
         });
     }
@@ -523,7 +527,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="slide-info">
                 <h2>${art.title}</h2>
                 <p class="artist">By ${art.artist}</p>
-                <p>프리미엄 아트 콜렉션 - ARTHIVE</p>
+                <p>Premium Art Collection - ARTHIVE</p>
             </div>
         `;
 
