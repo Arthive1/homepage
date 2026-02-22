@@ -1015,3 +1015,134 @@ main {
         border-bottom-color: var(--primary-color);
     }
 }
+
+/* My Info Specific Styles */
+.tab-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 25px;
+    position: relative;
+}
+
+.tab-header h2 {
+    margin-bottom: 5px;
+}
+
+.my-info-grid {
+    display: flex;
+    gap: 40px;
+    margin-top: 10px;
+    align-items: stretch;
+}
+
+.profile-photo-column {
+    flex: 1;
+    max-width: 33.333%;
+}
+
+.user-details-column {
+    flex: 2;
+}
+
+.profile-drop-zone {
+    width: 100%;
+    height: 100%;
+    min-height: 300px;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px dashed var(--glass-border);
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: var(--transition);
+    text-align: center;
+    padding: 20px;
+    overflow: hidden;
+}
+
+.profile-drop-zone:hover {
+    border-color: var(--primary-color);
+    background: rgba(201, 160, 80, 0.05);
+}
+
+.profile-drop-zone p {
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    margin-bottom: 5px;
+}
+
+.profile-drop-zone .sub-text {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.profile-drop-zone img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+@media (max-width: 768px) {
+    .my-info-grid {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .profile-photo-column {
+        max-width: 250px;
+        margin-bottom: 30px;
+    }
+}
+
+/* Contract Table Styles */
+.contract-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.contract-table th,
+.contract-table td {
+    padding: 15px 20px;
+    text-align: left;
+    border-bottom: 1px solid var(--glass-border);
+}
+
+.contract-table th {
+    color: var(--text-secondary);
+    font-weight: 600;
+    font-size: 0.9rem;
+    background: rgba(255, 255, 255, 0.03);
+    white-space: nowrap;
+}
+
+.contract-table td {
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    vertical-align: middle;
+}
+
+.contract-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.contract-table tbody tr:hover td {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.contract-status {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    background: rgba(255, 193, 7, 0.2);
+    color: #ffc107;
+    border: 1px solid rgba(255, 193, 7, 0.5);
+}

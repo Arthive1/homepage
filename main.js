@@ -145,6 +145,43 @@ function parsePrice(priceStr) {
     return Number(priceStr.replace(/[^0-9]/g, ''));
 }
 
+let profileImageData = null;
+
+// Local Storage setup for Contracts
+const ARTIST_CONTRACTS_KEY = 'arthive_artist_contracts';
+const COLLECTOR_CONTRACTS_KEY = 'arthive_collector_contracts';
+let artistContracts = JSON.parse(localStorage.getItem(ARTIST_CONTRACTS_KEY)) || [];
+let collectorContracts = JSON.parse(localStorage.getItem(COLLECTOR_CONTRACTS_KEY)) || [];
+
+function saveContracts() {
+    localStorage.setItem(ARTIST_CONTRACTS_KEY, JSON.stringify(artistContracts));
+    localStorage.setItem(COLLECTOR_CONTRACTS_KEY, JSON.stringify(collectorContracts));
+}
+
+function getFormattedDate() {
+    const d = new Date();
+    return `'${d.getFullYear().toString().slice(-2)}. ${d.getMonth() + 1}. ${d.getDate()}.`;
+}
+
+// Daum Postcode API Search Function for Account Info
+function execDaumPostcodeForInfo() {
+    new daum.Postcode({
+        oncomplete: function (data) {
+            let addr = data.userSelectedType === 'R' ? data.roadAddress : data.jibunAddress;
+            if (data.userSelectedType === 'R') {
+                let extraAddr = '';
+                if (data.bname !== '' && /[동|로|가]$/g.test(data.bname)) extraAddr += data.bname;
+                if (data.buildingName !== '' && data.apartment === 'Y') extraAddr += (extraAddr !== '' ? ', ' + data.buildingName : data.buildingName);
+                if (extraAddr !== '') addr += ' (' + extraAddr + ')';
+            }
+            const addrField = document.getElementById("infoAddress");
+            if (addrField) addrField.value = addr;
+            const detailField = document.getElementById("infoAddressDetail");
+            if (detailField) detailField.focus();
+        }
+    }).open();
+}
+
 // Daum Postcode API Search Function
 function execDaumPostcode() {
     new daum.Postcode({
@@ -333,6 +370,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const myAccountBtn = document.getElementById('myAccountBtn');
     const sidebarLinks = document.querySelectorAll('.sidebar-link');
     const tabContents = document.querySelectorAll('.tab-content');
+    const myInfoForm = document.getElementById('myInfoForm');
+    const profileDropZone = document.getElementById('profileDropZone');
+    const profileFileInput = document.getElementById('profileFileInput');
 
     if (openUploadBtn) {
         openUploadBtn.addEventListener('click', () => {
@@ -354,6 +394,107 @@ document.addEventListener('DOMContentLoaded', () => {
     if (myAccountBtn) {
         myAccountBtn.addEventListener('click', () => {
             switchSection('myAccountSection');
+            loadUserInfo();
+            renderContracts();
+        });
+    }
+
+    // Load User Info from DB
+    async function loadUserInfo() {
+        const user = auth.currentUser;
+        const mockUser = sessionStorage.getItem('mockUser');
+
+        if (mockUser) {
+            document.getElementById('infoName').value = sessionStorage.getItem('currentUserDisplayName') || "";
+            document.getElementById('infoEmail').value = mockUser;
+            document.getElementById('infoPhone').value = "010-1234-5678";
+            document.getElementById('infoAddress').value = "Seoul, Gangnam-gu";
+            return;
+        }
+
+        if (user) {
+            document.getElementById('infoEmail').value = user.email;
+            try {
+                const doc = await db.collection('users').doc(user.uid).get();
+                if (doc.exists) {
+                    const data = doc.data();
+                    document.getElementById('infoName').value = data.displayName || "";
+                    document.getElementById('infoPhone').value = data.phone || "";
+                    document.getElementById('infoAddress').value = data.address || "";
+
+                    if (data.profileImage) {
+                        if (profileDropZone) {
+                            profileDropZone.innerHTML = `<img src="${data.profileImage}" style="width:100%; height:100%; object-fit:cover;">`;
+                        }
+                        profileImageData = data.profileImage;
+                    }
+                }
+            } catch (error) {
+                console.error("Error loading info:", error);
+            }
+        }
+    }
+
+    // Profile Photo Logic
+    if (profileDropZone && profileFileInput) {
+        profileDropZone.addEventListener('click', () => profileFileInput.click());
+        profileDropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            profileDropZone.style.borderColor = 'var(--primary-color)';
+        });
+        profileDropZone.addEventListener('dragleave', () => {
+            profileDropZone.style.borderColor = 'var(--glass-border)';
+        });
+        profileDropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            profileDropZone.style.borderColor = 'var(--glass-border)';
+            handleProfileFile(e.dataTransfer.files[0]);
+        });
+        profileFileInput.addEventListener('change', (e) => handleProfileFile(e.target.files[0]));
+    }
+
+    function handleProfileFile(file) {
+        if (file && file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                profileImageData = e.target.result;
+                profileDropZone.innerHTML = `<img src="${profileImageData}" style="width:100%; height:100%; object-fit:cover;">`;
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    // Change Save Logic
+    if (myInfoForm) {
+        myInfoForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('infoName').value;
+            const phone = document.getElementById('infoPhone').value;
+            const address = document.getElementById('infoAddress').value;
+            const addressDetail = document.getElementById('infoAddressDetail').value;
+            const fullAddress = `${address} ${addressDetail}`.trim();
+
+            const user = auth.currentUser;
+            if (user) {
+                try {
+                    await db.collection('users').doc(user.uid).update({
+                        displayName: name,
+                        phone: phone,
+                        address: fullAddress,
+                        profileImage: profileImageData
+                    });
+                    await user.updateProfile({ displayName: name });
+                    alert('Profile updated successfully!');
+                    updateUIForLoginState(true, user.email, name);
+                } catch (error) {
+                    console.error("Update error:", error);
+                    alert("Failed to update profile.");
+                }
+            } else {
+                sessionStorage.setItem('currentUserDisplayName', name);
+                updateUIForLoginState(true, sessionStorage.getItem('mockUser'), name);
+                alert('Mock profile updated (Session only).');
+            }
         });
     }
 
@@ -394,7 +535,37 @@ document.addEventListener('DOMContentLoaded', () => {
         bidForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const amount = document.getElementById('bidAmount').value;
-            alert(`Successfully submitted a bid of ${amount} for "${bidArtworkTitle.textContent}"!`);
+            const artworkTitle = bidArtworkTitle.textContent;
+
+            // Find artist of this artwork
+            const targetArt = artData.find(a => a.title === artworkTitle);
+            const artistName = targetArt ? targetArt.artist : "Unknown Artist";
+
+            // Add to collectorContracts
+            collectorContracts.push({
+                date: getFormattedDate(),
+                title: artworkTitle,
+                artist: artistName,
+                bidAmount: amount,
+                status: "진행중",
+                collectorEmail: sessionStorage.getItem('mockUser') || auth.currentUser?.email
+            });
+
+            // Update artistContracts highest bid if applicable
+            let ac = artistContracts.find(a => a.title === artworkTitle);
+            if (ac) {
+                if (!ac.highestBid || parsePrice(amount) > parsePrice(ac.highestBid)) {
+                    ac.highestBid = amount;
+                    ac.highestBidder = sessionStorage.getItem('currentUserDisplayName') || (sessionStorage.getItem('mockUser') || "User");
+                }
+            }
+            saveContracts();
+
+            if (document.getElementById('myAccountSection').classList.contains('active')) {
+                renderContracts();
+            }
+
+            alert(`Successfully submitted a bid of ${amount} for "${artworkTitle}"!`);
             if (bidModal) bidModal.style.display = 'none';
             bidForm.reset();
         });
@@ -481,6 +652,22 @@ document.addEventListener('DOMContentLoaded', () => {
             };
 
             artData.push(newArt);
+
+            // Add to artistContracts
+            artistContracts.push({
+                date: getFormattedDate(),
+                title: title,
+                startingBid: price,
+                highestBid: null,
+                highestBidder: null,
+                artistEmail: sessionStorage.getItem('mockUser') || auth.currentUser?.email
+            });
+            saveContracts();
+
+            if (document.getElementById('myAccountSection').classList.contains('active')) {
+                renderContracts();
+            }
+
             alert('Artwork uploaded successfully!');
             uploadModal.style.display = 'none';
             resetUploadModal();
@@ -828,6 +1015,73 @@ document.addEventListener('DOMContentLoaded', () => {
                 link.classList.remove('active');
             }
         });
+    }
+
+    // Function to render Contracts Tab Content
+    function renderContracts() {
+        const container = document.getElementById('contractListContainer');
+        if (!container) return;
+
+        const accountType = sessionStorage.getItem('mockAccountType') || sessionStorage.getItem('currentUserAccountType') || 'collector';
+        const currentUserEmail = sessionStorage.getItem('mockUser') || auth.currentUser?.email;
+
+        let html = '';
+
+        if (accountType === 'artist') {
+            const myUploads = artistContracts.filter(c => c.artistEmail === currentUserEmail);
+            html = `
+                <table class="contract-table">
+                    <thead>
+                        <tr>
+                            <th>업로드일</th>
+                            <th>작품명</th>
+                            <th>입찰시작가</th>
+                            <th>최고입찰가</th>
+                            <th>최고입찰자</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${myUploads.length > 0 ? myUploads.map(c => `
+                            <tr>
+                                <td>${c.date}</td>
+                                <td>${c.title}</td>
+                                <td>${c.startingBid}</td>
+                                <td>${c.highestBid || 'None'}</td>
+                                <td>${c.highestBidder || 'None'}</td>
+                            </tr>
+                        `).join('') : `<tr><td colspan="5" style="text-align:center; padding: 20px;">No abstract uploads yet.</td></tr>`}
+                    </tbody>
+                </table>
+            `;
+        } else {
+            const myBids = collectorContracts.filter(c => c.collectorEmail === currentUserEmail);
+            html = `
+                <table class="contract-table">
+                    <thead>
+                        <tr>
+                            <th>입찰일</th>
+                            <th>입찰작품명</th>
+                            <th>작가 이름</th>
+                            <th>입찰가</th>
+                            <th>낙찰여부</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${myBids.length > 0 ? myBids.map(c => `
+                            <tr>
+                                <td>${c.date}</td>
+                                <td>${c.title}</td>
+                                <td>${c.artist}</td>
+                                <td>${c.bidAmount}</td>
+                                <td><span class="contract-status">${c.status}</span></td>
+                            </tr>
+                        `).join('') : `<tr><td colspan="5" style="text-align:center; padding: 20px;">No bidding history found.</td></tr>`}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        container.innerHTML = html;
     }
 
     navLinks.forEach(link => {

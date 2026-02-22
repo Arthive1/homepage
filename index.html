@@ -78,18 +78,58 @@
                 </aside>
                 <div class="account-content" id="accountContentArea">
                     <div id="myInfoTab" class="tab-content">
-                        <h2>My Information</h2>
-                        <p class="tab-desc">Manage your personal details and account settings.</p>
-                        <!-- Info fields will be added later -->
-                        <div class="placeholder-content">
-                            Setting values will be implemented here.
+                        <div class="tab-header">
+                            <div>
+                                <h2>My Information</h2>
+                                <p class="tab-desc">Manage your personal details and account settings.</p>
+                            </div>
+                            <button type="submit" form="myInfoForm" class="btn btn-upload-trigger">Change Save</button>
+                        </div>
+                        <div class="my-info-grid">
+                            <div class="profile-photo-column">
+                                <div class="profile-drop-zone" id="profileDropZone">
+                                    <p>Please upload your profile photo</p>
+                                    <span class="sub-text">(Click or Drag & Drop)</span>
+                                    <input type="file" id="profileFileInput" accept="image/*" style="display: none;">
+                                </div>
+                            </div>
+                            <div class="user-details-column">
+                                <form id="myInfoForm">
+                                    <div class="form-group">
+                                        <label>Full Name</label>
+                                        <input type="text" id="infoName" placeholder="Your Name" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Email Address</label>
+                                        <input type="email" id="infoEmail" readonly
+                                            style="opacity: 0.7; cursor: not-allowed;">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Phone Number</label>
+                                        <input type="tel" id="infoPhone" placeholder="010-0000-0000" required>
+                                    </div>
+                                    <div class="form-group" style="margin-bottom: 5px;">
+                                        <label>Address</label>
+                                        <div class="address-group">
+                                            <input type="text" id="infoAddress"
+                                                placeholder="Click Search to find address" readonly required>
+                                            <button type="button" class="btn-address-search"
+                                                onclick="execDaumPostcodeForInfo()">Search</button>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <input type="text" id="infoAddressDetail"
+                                            placeholder="Detailed Address (Apt, Suite, etc.)">
+                                    </div>
+                                </form>
+                            </div>
                         </div>
                     </div>
                     <div id="contractTab" class="tab-content hidden">
                         <h2>Contract Management</h2>
                         <p class="tab-desc">View and manage your artwork transaction contracts.</p>
-                        <div class="placeholder-content">
-                            Contract details will be implemented here.
+                        <div id="contractListContainer">
+                            <!-- Contracts will be rendered here via JS -->
                         </div>
                     </div>
                 </div>
