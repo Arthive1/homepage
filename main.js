@@ -315,9 +315,10 @@ document.addEventListener('DOMContentLoaded', () => {
     renderArtists();
     renderHallOfFame();
 
-    const loginBtn = document.querySelector('.btn-login');
-    const openSignupBtn = document.querySelector('.btn-signup');
+    const openSigninBtn = document.getElementById('openSigninBtn');
+    const openSignupBtn = document.getElementById('openSignupBtn');
     const googleLoginBtn = document.getElementById('googleLoginBtn');
+    const googleSignupBtn = document.getElementById('googleSignupBtn');
 
     // Login UI Elements
     const loginSection = document.getElementById('loginSection');
@@ -341,42 +342,58 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Modal Elements
     const signupModal = document.getElementById('signupModal');
-    const closeModal = document.querySelector('.close-modal');
+    const signinModal = document.getElementById('signinModal');
+    const closeModal = document.querySelector('#signupModal .close-modal');
+    const closeSigninModal = document.querySelector('#signinModal .close-modal');
     const signupForm = document.getElementById('signupForm');
+    const signinForm = document.getElementById('signinForm');
 
     // Email Login
-    loginBtn.addEventListener('click', async () => {
-        if (!checkConfig()) return;
+    if (signinForm) {
+        signinForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!checkConfig()) return;
 
-        const email = document.getElementById('username').value;
-        const password = document.getElementById('password').value;
+            const email = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
 
-        if (!email || !password) {
-            alert('Please enter both email and password.');
-            return;
-        }
+            if (!email || !password) {
+                alert('Please enter both email and password.');
+                return;
+            }
 
-        // Test Account Bypass
-        if (email === '1234@gmail.com' && password === '123456') {
-            alert('Logged in with test account!');
-            sessionStorage.setItem('mockUser', email);
-            updateUIForLoginState(true, email);
-            return;
-        }
+            // Test Account Bypass
+            if (email === '1234@gmail.com' && password === '123456') {
+                alert('Logged in with test account!');
+                sessionStorage.setItem('mockUser', email);
+                updateUIForLoginState(true, email);
+                if (signinModal) signinModal.style.display = 'none';
+                return;
+            }
 
-        try {
-            const userCredential = await auth.signInWithEmailAndPassword(email, password);
-            alert(`Welcome, ${userCredential.user.email}!`);
-        } catch (error) {
-            console.error("Login Error:", error);
-            alert(`Login failed: ${error.message}`);
-        }
-    });
+            try {
+                const userCredential = await auth.signInWithEmailAndPassword(email, password);
+                alert(`Welcome, ${userCredential.user.email}!`);
+                if (signinModal) signinModal.style.display = 'none';
+            } catch (error) {
+                console.error("Login Error:", error);
+                alert(`Login failed: ${error.message}`);
+            }
+        });
+    }
 
-    // Signup Modal Show/Hide
-    openSignupBtn.addEventListener('click', () => {
-        if (signupModal) signupModal.style.display = 'block';
-    });
+    // Modals Show/Hide
+    if (openSignupBtn) {
+        openSignupBtn.addEventListener('click', () => {
+            if (signupModal) signupModal.style.display = 'block';
+        });
+    }
+
+    if (openSigninBtn) {
+        openSigninBtn.addEventListener('click', () => {
+            if (signinModal) signinModal.style.display = 'block';
+        });
+    }
 
     if (closeModal) {
         closeModal.addEventListener('click', () => {
@@ -384,9 +401,18 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    if (closeSigninModal) {
+        closeSigninModal.addEventListener('click', () => {
+            signinModal.style.display = 'none';
+        });
+    }
+
     window.addEventListener('click', (e) => {
         if (e.target === signupModal) {
             signupModal.style.display = 'none';
+        }
+        if (e.target === signinModal) {
+            signinModal.style.display = 'none';
         }
     });
 
@@ -478,19 +504,27 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Google Login
-    if (googleLoginBtn) {
-        googleLoginBtn.addEventListener('click', async () => {
-            if (!checkConfig()) return;
+    // Google Login / Signup
+    const handleGoogleAuth = async () => {
+        if (!checkConfig()) return;
 
-            try {
-                const result = await auth.signInWithPopup(googleProvider);
-                alert(`Welcome, ${result.user.displayName}!`);
-            } catch (error) {
-                console.error("Google Login Error:", error);
-                alert(`Google login failed: ${error.message}`);
-            }
-        });
+        try {
+            const result = await auth.signInWithPopup(googleProvider);
+            alert(`Welcome, ${result.user.displayName}!`);
+            if (signinModal) signinModal.style.display = 'none';
+            if (signupModal) signupModal.style.display = 'none';
+        } catch (error) {
+            console.error("Google Auth Error:", error);
+            alert(`Google authentication failed: ${error.message}`);
+        }
+    };
+
+    if (googleLoginBtn) {
+        googleLoginBtn.addEventListener('click', handleGoogleAuth);
+    }
+
+    if (googleSignupBtn) {
+        googleSignupBtn.addEventListener('click', handleGoogleAuth);
     }
 
     // Track Auth State & Logout
