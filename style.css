@@ -832,6 +832,19 @@ main {
         justify-content: center;
     }
 
+    .user-profile {
+        flex-wrap: wrap;
+        justify-content: center;
+        width: 100%;
+        gap: 12px;
+    }
+
+    .user-profile .user-id {
+        width: 100%;
+        text-align: center;
+        font-size: 1.1rem;
+    }
+
     .slide-info {
         max-width: 90%;
         bottom: 30px;
