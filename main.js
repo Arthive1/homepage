@@ -231,7 +231,7 @@ function renderGallery() {
 
     // Sort: On Sale (1) > Pending (2) > Sold Out (3), then by Price DESC
     const statusOrder = { "On Sale": 1, "Pending": 2, "Sold Out": 3 };
-    const sortedGalleryData = [...artData].filter(art => art.status !== 'Pending Approval').sort((a, b) => {
+    const sortedGalleryData = [...artData].filter(art => art.status !== 'Pending Approval' && art.status !== 'Rejected').sort((a, b) => {
         if (statusOrder[a.status] !== statusOrder[b.status]) {
             return statusOrder[a.status] - statusOrder[b.status];
         }
@@ -302,7 +302,7 @@ function renderArtists() {
     artistGrid.innerHTML = '';
 
     const artistsMap = new Map();
-    artData.filter(art => art.status !== 'Pending Approval').forEach(art => {
+    artData.filter(art => art.status !== 'Pending Approval' && art.status !== 'Rejected').forEach(art => {
         if (!artistsMap.has(art.artist)) {
             artistsMap.set(art.artist, {
                 name: art.artist,
@@ -682,7 +682,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const approvalsTabLink = document.getElementById('approvalsTabLink');
 
         if (approvalsTabLink) {
-            approvalsTabLink.style.display = isAdmin ? 'flex' : 'none';
+            approvalsTabLink.style.display = (isAdmin || isArtist) ? 'flex' : 'none';
         }
 
         if (isLoggedIn) {
@@ -1100,9 +1100,22 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!container) return;
 
         const accountType = sessionStorage.getItem('mockAccountType') || sessionStorage.getItem('currentUserAccountType');
-        if (accountType !== 'admin') return;
+        if (accountType !== 'admin' && accountType !== 'artist') return;
 
-        const pendingItems = artData.filter(a => a.status === 'Pending Approval');
+        const isAdmin = accountType === 'admin';
+        const currentUserEmail = sessionStorage.getItem('mockUser') || auth.currentUser?.email;
+
+        const titleEl = document.getElementById('approvalsTitle');
+        const descEl = document.getElementById('approvalsDesc');
+        if (titleEl) titleEl.textContent = isAdmin ? 'Pending Approvals' : 'My Artworks Status';
+        if (descEl) descEl.textContent = isAdmin ? 'Review and approve artworks requested by artists.' : 'Track the approval status of your submitted artworks.';
+
+        let displayItems = [];
+        if (isAdmin) {
+            displayItems = artData.filter(a => a.status === 'Pending Approval');
+        } else {
+            displayItems = artData.filter(a => a.artistEmail === currentUserEmail && a.uploadDate);
+        }
 
         container.innerHTML = `
             <table class="contract-table">
@@ -1113,63 +1126,84 @@ document.addEventListener('DOMContentLoaded', () => {
                         <th>Title</th>
                         <th>Artist Name</th>
                         <th>Starting Bid</th>
-                        <th>Actions</th>
+                        <th>${isAdmin ? 'Actions' : 'Status'}</th>
                     </tr>
                 </thead>
                 <tbody>
-                    ${pendingItems.length > 0 ? pendingItems.map(c => `
+                    ${displayItems.length > 0 ? displayItems.map(c => {
+            let actionHtml = '';
+            if (isAdmin) {
+                actionHtml = `
+                                <button class="btn-approve" data-title="${c.title}" style="background-color: var(--primary-color); color: white; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; margin-right: 5px; font-size: 0.8rem;">Approve</button>
+                                <button class="btn-delete" data-title="${c.title}" style="background-color: #f44336; color: white; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem;">Delete</button>
+                            `;
+            } else {
+                let statusText = 'Pending';
+                let statusColor = '#f39c12';
+                if (c.status === 'Rejected') {
+                    statusText = 'Rejected';
+                    statusColor = '#f44336';
+                } else if (c.status !== 'Pending Approval') {
+                    statusText = 'Approved';
+                    statusColor = '#4caf50';
+                }
+                actionHtml = `<span style="font-weight: 600; color: ${statusColor};">${statusText}</span>`;
+            }
+
+            return `
                         <tr>
                             <td>${c.uploadDate || '-'}</td>
                             <td><img src="${c.image}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px;"></td>
                             <td>${c.title}</td>
                             <td>${c.artist}</td>
                             <td>${c.price}</td>
-                            <td>
-                                <button class="btn-approve" data-title="${c.title}" style="background-color: var(--primary-color); color: white; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; margin-right: 5px; font-size: 0.8rem;">Approve</button>
-                                <button class="btn-delete" data-title="${c.title}" style="background-color: #f44336; color: white; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem;">Delete</button>
-                            </td>
+                            <td>${actionHtml}</td>
                         </tr>
-                    `).join('') : `<tr><td colspan="6" style="text-align:center; padding: 20px;">No pending approvals.</td></tr>`}
+                        `;
+        }).join('') : `<tr><td colspan="6" style="text-align:center; padding: 20px;">No artworks found.</td></tr>`}
                 </tbody>
             </table>
         `;
 
-        container.querySelectorAll('.btn-approve').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const title = e.target.dataset.title;
-                const art = artData.find(a => a.title === title && a.status === 'Pending Approval');
-                if (art) {
-                    art.status = 'On Sale';
-                    artistContracts.push({
-                        date: art.uploadDate || getFormattedDate(),
-                        title: art.title,
-                        startingBid: art.price,
-                        highestBid: null,
-                        highestBidder: null,
-                        artistEmail: art.artistEmail || 'unknown'
-                    });
-                    saveContracts();
-                    alert('Artwork has been Approved.');
-                    renderApprovals();
-                    renderGallery();
-                    renderArtists();
-                }
-            });
-        });
-
-        container.querySelectorAll('.btn-delete').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                if (confirm('Are you sure you want to delete this artwork request?')) {
+        // Only attach event listeners for admin buttons
+        if (isAdmin) {
+            container.querySelectorAll('.btn-approve').forEach(btn => {
+                btn.addEventListener('click', (e) => {
                     const title = e.target.dataset.title;
-                    const idx = artData.findIndex(a => a.title === title && a.status === 'Pending Approval');
-                    if (idx !== -1) {
-                        artData.splice(idx, 1);
-                        alert('Artwork request Deleted.');
+                    const art = artData.find(a => a.title === title && a.status === 'Pending Approval');
+                    if (art) {
+                        art.status = 'On Sale';
+                        artistContracts.push({
+                            date: art.uploadDate || getFormattedDate(),
+                            title: art.title,
+                            startingBid: art.price,
+                            highestBid: null,
+                            highestBidder: null,
+                            artistEmail: art.artistEmail || 'unknown'
+                        });
+                        saveContracts();
+                        alert('Artwork has been Approved.');
                         renderApprovals();
+                        renderGallery();
+                        renderArtists();
                     }
-                }
+                });
             });
-        });
+
+            container.querySelectorAll('.btn-delete').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    if (confirm('Are you sure you want to reject this artwork request?')) {
+                        const title = e.target.dataset.title;
+                        const art = artData.find(a => a.title === title && a.status === 'Pending Approval');
+                        if (art) {
+                            art.status = 'Rejected';
+                            alert('Artwork request Rejected.');
+                            renderApprovals();
+                        }
+                    }
+                });
+            });
+        }
     }
 
     navLinks.forEach(link => {
