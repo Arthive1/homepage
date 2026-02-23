@@ -231,7 +231,7 @@ function renderGallery() {
 
     // Sort: On Sale (1) > Pending (2) > Sold Out (3), then by Price DESC
     const statusOrder = { "On Sale": 1, "Pending": 2, "Sold Out": 3 };
-    const sortedGalleryData = [...artData].sort((a, b) => {
+    const sortedGalleryData = [...artData].filter(art => art.status !== 'Pending Approval').sort((a, b) => {
         if (statusOrder[a.status] !== statusOrder[b.status]) {
             return statusOrder[a.status] - statusOrder[b.status];
         }
@@ -302,7 +302,7 @@ function renderArtists() {
     artistGrid.innerHTML = '';
 
     const artistsMap = new Map();
-    artData.forEach(art => {
+    artData.filter(art => art.status !== 'Pending Approval').forEach(art => {
         if (!artistsMap.has(art.artist)) {
             artistsMap.set(art.artist, {
                 name: art.artist,
@@ -396,6 +396,7 @@ document.addEventListener('DOMContentLoaded', () => {
             switchSection('myAccountSection');
             loadUserInfo();
             renderContracts();
+            if (typeof renderApprovals === 'function') renderApprovals();
         });
     }
 
@@ -647,32 +648,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 artistYears: "Contemporary",
                 artistImage: "https://upload.wikimedia.org/wikipedia/commons/8/89/Portrait_Placeholder.png",
                 price: price,
-                status: "On Sale",
-                image: selectedImageData
+                status: "Pending Approval",
+                image: selectedImageData,
+                uploadDate: getFormattedDate(),
+                artistEmail: sessionStorage.getItem('mockUser') || auth.currentUser?.email
             };
 
             artData.push(newArt);
 
-            // Add to artistContracts
-            artistContracts.push({
-                date: getFormattedDate(),
-                title: title,
-                startingBid: price,
-                highestBid: null,
-                highestBidder: null,
-                artistEmail: sessionStorage.getItem('mockUser') || auth.currentUser?.email
-            });
-            saveContracts();
-
-            if (document.getElementById('myAccountSection').classList.contains('active')) {
-                renderContracts();
-            }
-
-            alert('Artwork uploaded successfully!');
+            alert('Artwork submitted for approval!');
             uploadModal.style.display = 'none';
             resetUploadModal();
             renderGallery();
             renderArtists();
+            if (document.getElementById('myAccountSection').classList.contains('active')) {
+                if (typeof renderApprovals === 'function') renderApprovals();
+            }
         });
     }
 
@@ -686,7 +677,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const mockType = sessionStorage.getItem('mockAccountType');
         const realType = sessionStorage.getItem('currentUserAccountType');
         const isArtist = mockType === 'artist' || realType === 'artist';
+        const isAdmin = mockType === 'admin' || realType === 'admin';
         const openUploadBtn = document.getElementById('openUploadBtn');
+        const approvalsTabLink = document.getElementById('approvalsTabLink');
+
+        if (approvalsTabLink) {
+            approvalsTabLink.style.display = isAdmin ? 'flex' : 'none';
+        }
 
         if (isLoggedIn) {
             if (displayName) sessionStorage.setItem('currentUserDisplayName', displayName);
@@ -748,6 +745,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 sessionStorage.setItem('mockUser', email);
                 sessionStorage.setItem('mockAccountType', 'artist');
                 updateUIForLoginState(true, email, 'Leonardo da Vinci');
+                if (signinModal) signinModal.style.display = 'none';
+                renderGallery();
+                return;
+            }
+
+            // Test Account Bypass - Admin
+            if (email === 'admin@arthive.com' && password === '123456') {
+                alert('Logged in with Admin account!');
+                sessionStorage.setItem('mockUser', email);
+                sessionStorage.setItem('mockAccountType', 'admin');
+                updateUIForLoginState(true, email, 'Admin User');
                 if (signinModal) signinModal.style.display = 'none';
                 renderGallery();
                 return;
@@ -1084,6 +1092,84 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         container.innerHTML = html;
+    }
+
+    // Function to render Approvals Tab Content
+    function renderApprovals() {
+        const container = document.getElementById('approvalsListContainer');
+        if (!container) return;
+
+        const accountType = sessionStorage.getItem('mockAccountType') || sessionStorage.getItem('currentUserAccountType');
+        if (accountType !== 'admin') return;
+
+        const pendingItems = artData.filter(a => a.status === 'Pending Approval');
+
+        container.innerHTML = `
+            <table class="contract-table">
+                <thead>
+                    <tr>
+                        <th>Upload Date</th>
+                        <th>Image</th>
+                        <th>Title</th>
+                        <th>Artist Name</th>
+                        <th>Starting Bid</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${pendingItems.length > 0 ? pendingItems.map(c => `
+                        <tr>
+                            <td>${c.uploadDate || '-'}</td>
+                            <td><img src="${c.image}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px;"></td>
+                            <td>${c.title}</td>
+                            <td>${c.artist}</td>
+                            <td>${c.price}</td>
+                            <td>
+                                <button class="btn-approve" data-title="${c.title}" style="background-color: var(--primary-color); color: white; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; margin-right: 5px; font-size: 0.8rem;">Approve</button>
+                                <button class="btn-delete" data-title="${c.title}" style="background-color: #f44336; color: white; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem;">Delete</button>
+                            </td>
+                        </tr>
+                    `).join('') : `<tr><td colspan="6" style="text-align:center; padding: 20px;">No pending approvals.</td></tr>`}
+                </tbody>
+            </table>
+        `;
+
+        container.querySelectorAll('.btn-approve').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const title = e.target.dataset.title;
+                const art = artData.find(a => a.title === title && a.status === 'Pending Approval');
+                if (art) {
+                    art.status = 'On Sale';
+                    artistContracts.push({
+                        date: art.uploadDate || getFormattedDate(),
+                        title: art.title,
+                        startingBid: art.price,
+                        highestBid: null,
+                        highestBidder: null,
+                        artistEmail: art.artistEmail || 'unknown'
+                    });
+                    saveContracts();
+                    alert('Artwork has been Approved.');
+                    renderApprovals();
+                    renderGallery();
+                    renderArtists();
+                }
+            });
+        });
+
+        container.querySelectorAll('.btn-delete').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                if (confirm('Are you sure you want to delete this artwork request?')) {
+                    const title = e.target.dataset.title;
+                    const idx = artData.findIndex(a => a.title === title && a.status === 'Pending Approval');
+                    if (idx !== -1) {
+                        artData.splice(idx, 1);
+                        alert('Artwork request Deleted.');
+                        renderApprovals();
+                    }
+                }
+            });
+        });
     }
 
     navLinks.forEach(link => {
